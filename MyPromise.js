@@ -2,38 +2,53 @@
 class MyPromise {
     constructor(executor) {
         executor((result) => {
-            if (this.thenCallbacks) {
-                let currPromise = this;
-                for (let callback of this.thenCallbacks) {
-                    if (currPromise === this) {
-                        result = callback(result);
-                        if (result instanceof MyPromise) {
-                            currPromise = result;
-                        }
-                    } else {
-                        currPromise.then(callback);
-                    }
+            if (this.thenCallback) {
+                if (result instanceof MyPromise) {
+                    console.log("Result is a promise");
+                    result.then(this.thenCallback);
+                } else {
+                    this.thenCallback(result);
                 }
             } else {
-                this.resolved = result;
+                this.resolved = true;
+                this.resolvedValue = result;
             }
         }, (err) => {
         });
     }
 
-    then(callback) {
-        if (this.resolved) {
-            this.resolved = callback(this.resolved);
-            if (this.resolved instanceof MyPromise) {
-                return this.resolved;
+    then(baseCallback) {
+        let resolveCallback;
+        let newPromise = new MyPromise((resolve, reject) => {
+            resolveCallback = (val) => {
+                if (val instanceof MyPromise) {
+                    val.then((val) => {
+                        resolve(val);
+                    });
+                } else {
+                    resolve(val);
+                }
             }
-        } else if (this.thenCallbacks) {
-            this.thenCallbacks.push(callback);
+        });
+
+
+        let callback = (val) => {
+            let newVal = baseCallback(val);
+
+            if (newVal) {
+                resolveCallback(newVal);
+            } else {
+                resolveCallback(val);
+            }
+        };
+
+        if (this.resolved) {
+            callback(this.resolvedValue);
         } else {
-            this.thenCallbacks = [callback];
+            this.thenCallback = callback;
         }
 
-        return this;
+        return newPromise;
     }
 }
 

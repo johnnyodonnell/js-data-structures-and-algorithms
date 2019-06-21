@@ -2,6 +2,14 @@ const MyPromise = require("../MyPromise");
 
 
 new MyPromise((resolve, reject) => {
+    resolve(0);
+}).then((result) => {
+    console.log(result);
+}).then((result) => {
+    console.log(result);
+});
+
+new MyPromise((resolve, reject) => {
     resolve(1);
 }).then((result) => {
     console.log(result);
